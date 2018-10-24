@@ -3,7 +3,9 @@ title: "R-INLA Blow Flies Analysis Tutorial"
 output: html_notebook
 ---
 
-
+```{r setup, results='hide'}
+knitr::opts_knit$set(root.dir = normalizePath(paste("D:","`Grad_Research","Rudy_RA_Work","R_Tutorial_Blow_Flies",sep="\\"))) 
+```
 
 ## Overview
 
@@ -19,13 +21,8 @@ There are two primary operations that we will be employing in this tutorial:
 
 ## Initialization
 
-We will divide our preliminary procedures into two groups: directory setup and package loading. For the purposes of this document,
-I will be running an additional code before. Since it only involves the nuances of the Markdown language used to create this
-tutorial, you can safely ignore it and proceed to the next subsection.
+We will divide our preliminary procedures into two groups: directory setup and package loading.
 
-```{r setup}
-knitr::opts_knit$set(root.dir = normalizePath(paste("D:","`Grad_Research","Rudy_RA_Work","R_Tutorial_Blow_Flies",sep="\\"))) 
-```
 
 ### Directory Setup
 
@@ -34,7 +31,7 @@ clear of variables using the rm() function (which is identical to the remove() f
 for R. What this is is essentially making sure that the program knows that the area it is performing calculations in is the folder
 where your data is.
 
-```{r}
+```{r a}
 remove(list=ls())
 setwd(paste("D:","`Grad_Research","Rudy_RA_Work","R_Tutorial_Blow_Flies",sep="\\"))
 ```
@@ -70,7 +67,7 @@ require(fastmatch)
 >"Using inla.graph: produces the graph from a shape file with information on all the area boundaries and uses a combination of 
 functions from different R packages." -Rudy Banerjee
 
-As Rudy explained in the quote above, what we're now going to do is use a bunch of combinations of the loaded packages' functions
+As Rudy explains in the quote above, what we're now going to do is use a bunch of combinations of the loaded packages' functions
 to convert the provided shapefile into an adjacency matrix, which will output to your "Plots" tab in Rstudio. To do this, we first
 will convert the shapefile to a special type of R dataframe, then will use that special dataframe object to generate a list of
 neighbors, and next will output an INLA .GRAPH into the folder. We will then define a variable to hold the location string for the
