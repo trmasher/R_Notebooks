@@ -1,0 +1,128 @@
+---
+title: "R-INLA Blow Flies Analysis Tutorial"
+output: html_notebook
+---
+
+
+
+## Overview
+
+The purpose of this tutorial is to provide instructions for the implementation of a few basic procedures available through the
+R-INLA package. In order to make use of these procedures, we will need to also make use of several other R packages.
+
+There are two primary operations that we will be employing in this tutorial:
+   
+  * Creating an adjacency matrix for the three study areas in the provided data set
+  * Performing a Bayesian hierarchical Poisson model, specifically a BYM model
+
+
+
+## Initialization
+
+We will divide our preliminary procedures into two groups: directory setup and package loading. For the purposes of this document,
+I will be running an additional code before. Since it only involves the nuances of the Markdown language used to create this
+tutorial, you can safely ignore it and proceed to the next subsection.
+
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath(paste("D:","`Grad_Research","Rudy_RA_Work","R_Tutorial_Blow_Flies",sep="\\"))) 
+```
+
+### Directory Setup
+
+We begin our tutorial by taking care of a few minor housekeeping procedures. First, we make sure that our entire R workspace is
+clear of variables using the rm() function (which is identical to the remove() function). And second, we set our working directory
+for R. What this is is essentially making sure that the program knows that the area it is performing calculations in is the folder
+where your data is.
+
+```{r}
+remove(list=ls())
+setwd(paste("D:","`Grad_Research","Rudy_RA_Work","R_Tutorial_Blow_Flies",sep="\\"))
+```
+
+Note that the above directory is accurate only for my own computer. For yourself, what you will want to do is replace all of the
+above strings with strings representing each folder level you have saved your data into. For example, if the location of your file
+is C:\\Users\\Me\\MyDocuments\\Geography\\This_Class, you will want the above setwd() to read: 
+setwd(paste("C:","Users","Me","MyDocuments","Geography","This_Class",sep="\\\\")).
+
+### Package Loading
+
+With the directory business out of the way, we move on to loading all of the packages that we will be making use of in this tutorial.
+What the require() function does is load a package into R so that you can use it in your code. Note that if you currently DO NOT
+have the listed package installed, the package load will fail. If this happens to you, then all you need to do is go to the "Tools"
+menu at the top of RStudio and click the first option, "Install Packages": just write in the desired package, and after a brief
+period of loading, run the require function on the package again.
+
+```{r b}
+require(INLA)
+inla.setOption(scale.model.default=FALSE)
+require(splancs)
+require(sp)
+require(fields)
+require(maptools)
+require(lattice)
+require(abind)
+require(spdep)
+require(fastmatch)
+```
+
+
+## From Shapefile to Adjacency Matrix
+>"Using inla.graph: produces the graph from a shape file with information on all the area boundaries and uses a combination of 
+functions from different R packages." -Rudy Banerjee
+
+As Rudy explained in the quote above, what we're now going to do is use a bunch of combinations of the loaded packages' functions
+to convert the provided shapefile into an adjacency matrix, which will output to your "Plots" tab in Rstudio. To do this, we first
+will convert the shapefile to a special type of R dataframe, then will use that special dataframe object to generate a list of
+neighbors, and next will output an INLA .GRAPH into the folder. We will then define a variable to hold the location string for the
+outputted graph for use later. Finally, we will use the INLA package to read the graph and record it as a variable object, and then
+we will the image() function to output our adjacency matrix to our "Plots" tab for the world to see.
+
+```{r c}
+z.gen <- readShapePoly("shp/all 3 overlay.shp")
+temp <- poly2nb(z.gen)
+nb2INLA("z.graph", temp)
+z.adj <- paste(getwd(),"/z.graph",sep="")
+
+H <- inla.read.graph(filename="z.graph")
+image(inla.graph2matrix(H),xlab="",ylab="")
+```
+
+Just as in the previous section, we will need to consider our filepath locations in order for our functions to, well, function. So
+long as you extract your shp.zip file to the same hypothetical folder C:\\Users\\Me\\MyDocuments\\Geography\\This_Class above, then
+you should be able to run the above code in your session without any trouble.
+
+
+
+## The BYM Model
+
+We now move on to the second primary operation in this tutorial: creating the BYM model. Our procedure will be as follows: we start
+by defining the formula we will use for our BYM model; next will read and record our provided .csv file (that is, our data being 
+modeled) onto a variable; will then define the outcome variable, compute the expected outcome for this variable, and verify that both
+values have a common mean; and finally use the INLA package to perform our BYM model. We will finish our tutorial by outputting a
+summary of our model, using the convenient summary() function. Here we go.
+
+```{r d}
+formula <- y ~ 1 + f(ID, model="bym",graph=z.adj)
+
+library(readr)
+Voronois <- read_csv("D:/`Grad_Research/Rudy_RA_Work/R_Tutorial_Blow_Flies/shp/Overlay.csv")
+
+y <- Voronois$TotalPhormia
+E <- Voronois$Area * sum(y)/sum(Voronois$Area)
+
+if (isTRUE(abs(mean(y)-mean(E))<1e-10)){
+  print("mean(y) and mean(E) are the same")
+}
+
+mod.Z <- inla(formula,family="poisson",
+                         data=Voronois,E=E,
+                         control.compute=list(dic=TRUE))
+summary(mod.Z)
+```
+
+In the above chunk, the variable 'y' is the outcome variable, and the variable 'E' is the expected outcome of this variable. The
+if statement simply outputs confirmation as to whether or not your mean(y) and mean(E) are the same value (well, 
+technically-speaking, not that they are the same, but that their difference is a neglible artifact of rounding errors). Lastly, as
+always, be aware that the read_csv() function is reading a folder location, specifically *my* folder location, meaning that you
+will once again have to replace the above character string with the one specific to where you have your files saved on your
+computer.
