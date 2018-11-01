@@ -44,24 +44,22 @@ setwd(paste("C:","Users","Me","MyDocuments","Geography","This_Class",sep="\\\\")
 ### Package Loading
 
 With the directory business out of the way, we move on to loading all of the packages that we will be making use of in this tutorial.
+What the lapply() function does is takes the 'X' argument and applies the 'FUN' function argument to it. 'character.only = TRUE' is
+an argument passed to the require() (or library()) functions to indicate that the argument(s) being passed are character strings.
 What the require() function does is load a package into R so that you can use it in your code. Note that if you currently DO NOT
 have the listed package installed, the package load will fail. If this happens to you, then all you need to do is go to the "Tools"
 menu at the top of RStudio and click the first option, "Install Packages": just write in the desired package, and after a brief
 period of loading, run the require function on the package again.
 
 ```{r b}
-require(INLA)
+required_packages <- c("INLA","splancs","sp","fields","maptools","lattice","abind","spdep","fastmatch")
+
+lapply(X = required_packages, FUN =  require, character.only=TRUE)
 inla.setOption(scale.model.default=FALSE)
-require(splancs)
-require(sp)
-require(fields)
-require(maptools)
-require(lattice)
-require(abind)
-require(spdep)
-require(fastmatch)
 ```
 
+This last option adjusts the global options for the R-INLA package to not use the 'default' option for 'scale.model'; the default 
+option is to scale models to have generalized unit average variance.
 
 ## From Shapefile to Adjacency Matrix
 >"Using inla.graph: produces the graph from a shape file with information on all the area boundaries and uses a combination of 
