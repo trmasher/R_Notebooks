@@ -1,5 +1,5 @@
 ---
-title: "A General OrganIzation Template for R Programs"
+title: "A General Organization Template for R Programs"
 output: html_notebook
 ---
 
